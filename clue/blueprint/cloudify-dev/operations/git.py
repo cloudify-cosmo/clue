@@ -17,6 +17,7 @@
 import json
 import os
 import sys
+import re
 
 import sh
 import yaml
@@ -100,10 +101,13 @@ class GitRepo(object):
         self.git.status(s=True).wait()
 
     def checkout(self, branch):
+        print('here-1')
         versions_prefix = '::'
         default_branch = self.branch
         active_feature = self.active_feature
-        if branch.startswith(versions_prefix):
+        if '*' in branch:
+            self._get_branch_name_from_regex(branch)
+        elif branch.startswith(versions_prefix):
             versions_branch = branch[len(versions_prefix):]
             components = self._read_versions_file(versions_branch)
             if self.name in components:
@@ -395,6 +399,16 @@ class GitRepo(object):
                     versions_branch)).stdout.strip()
         versions = yaml.safe_load(raw_versions)
         return versions.get('components', {})
+    def _get_branch_name_from_regex(self, branch):
+        branches = self.git.branch().strip().split('\n')
+        branch_name = [item for item in branches if re.search('build.*', item)]
+        if len(branch) > 1:
+            ctx.logger.error('More than one branch with regex {0} found: {1}'.format(branch, branch_name))
+        if not branch_name:
+            branch_name = "master"
+        else:
+            branch_name = ''.join(branch_name[0])
+        print(branch_name)
 repo = GitRepo()
 
 
