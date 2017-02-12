@@ -101,13 +101,17 @@ class GitRepo(object):
         self.git.status(s=True).wait()
 
     def checkout(self, branch):
-        print('here-1')
         versions_prefix = '::'
         default_branch = self.branch
         active_feature = self.active_feature
         if '*' in branch:
-            self._get_branch_name_from_regex(branch)
-        elif branch.startswith(versions_prefix):
+            branch_name = self._get_branch_name_from_regex(branch)
+            #print('return from func {0}={1}'.format(self.repo_location, branch_name))
+            if branch_name:
+                branch = branch_name
+            else:
+                branch = default_branch
+        if branch.startswith(versions_prefix):
             versions_branch = branch[len(versions_prefix):]
             components = self._read_versions_file(versions_branch)
             if self.name in components:
@@ -146,6 +150,7 @@ class GitRepo(object):
         elif branch.startswith('.'):
             branch = self._fix_branch_name(branch)
         try:
+            #print('limor - current_branch={0}, branch={1}'.format(self.current_branch, branch))
             if self.current_branch != branch:
                 self.git.checkout(branch).wait()
         except sh.ErrorReturnCode:
@@ -399,16 +404,22 @@ class GitRepo(object):
                     versions_branch)).stdout.strip()
         versions = yaml.safe_load(raw_versions)
         return versions.get('components', {})
+
     def _get_branch_name_from_regex(self, branch):
-        branches = self.git.branch().strip().split('\n')
-        branch_name = [item for item in branches if re.search('build.*', item)]
-        if len(branch) > 1:
-            ctx.logger.error('More than one branch with regex {0} found: {1}'.format(branch, branch_name))
-        if not branch_name:
-            branch_name = "master"
+        branches = self.git_output('branch', '-r').stdout.strip().split('\n')
+        branch_name = [item for item in branches if re.search(branch, item)]
+        #print('repo={0}, branch_name={1}'.format(self.repo_location, branch_name))
+        if len(branch_name) > 1:
+            ctx.logger.error('More than one branch with regex {0} found: {1}'
+                             .format(branch, branch_name))
+            return None
+        elif len(branch_name) == 1:
+            branch_name = ''.join(branch_name[0]).split("origin/")[-1]
+            #print('final_branch_name={0}'.format(branch_name))
+            return branch_name
         else:
-            branch_name = ''.join(branch_name[0])
-        print(branch_name)
+            return None
+
 repo = GitRepo()
 
 
@@ -474,6 +485,8 @@ class Hub(object):
             'GIT_DIR': repo_location / '.git'
         })
         return hub.bake(_env=env)
+
+
 hub = Hub()
 
 
@@ -539,6 +552,7 @@ def func(repo_method):
             method = getattr(hub, repo_method)
         return method(**kwargs)
     return wrapper
+
 
 for method in ['clone', 'configure', 'pull', 'status', 'checkout', 'reset',
                'rebase', 'squash', 'diff', 'create_branch', 'branch_exists',

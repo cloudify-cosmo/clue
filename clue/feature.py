@@ -199,6 +199,8 @@ class Features(object):
     def active_feature(self, value):
         with ctx.env.storage.payload() as payload:
             payload['active_feature'] = value
+
+
 features = Features()
 
 

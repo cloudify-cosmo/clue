@@ -24,5 +24,6 @@ def main():
                                             'blueprint',
                                             'clash.yaml'))
 
+
 if __name__ == '__main__':
     main()
