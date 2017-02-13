@@ -106,7 +106,7 @@ class GitRepo(object):
         active_feature = self.active_feature
 
         if '*' in branch:
-            branch=branch.replace('.', '\.')
+            branch = branch.replace('.', '\.')
             branch_name = self._get_branch_name_from_regex(branch)
             if branch_name:
                 branch = str(branch_name)
@@ -154,9 +154,8 @@ class GitRepo(object):
         try:
             if self.current_branch != branch:
                 self.git.checkout(branch).wait()
-        except sh.ErrorReturnCode, e:
+        except sh.ErrorReturnCode:
             ctx.logger.error('Could not checkout branch {0}'.format(branch))
-            #ctx.logger.error('Could not checkout branch {0}. Error: {1}'.format(branch, e))
 
     def reset(self, hard, origin):
         if not self.validate_active_feature():
@@ -410,7 +409,8 @@ class GitRepo(object):
     def _get_branch_name_from_regex(self, branch):
         branches = self.git_output('branch', '-a').stdout.strip().split('\n')
         branches = [str(self._escape_ansi(item)).strip() for item in branches]
-        branch_names = [item.split("remotes/")[-1].split("origin/")[-1] for item in branches if re.search(branch, item)]
+        branch_names = [item.split("remotes/")[-1].split("origin/")[-1]
+                        for item in branches if re.search(branch, item)]
         # remove duplicate branches remote and local
         branch_name = list(set(branch_names))
         if len(branch_name) > 1:
@@ -426,6 +426,7 @@ class GitRepo(object):
     def _escape_ansi(self, line):
         ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
         return ansi_escape.sub('', line)
+
 
 repo = GitRepo()
 
