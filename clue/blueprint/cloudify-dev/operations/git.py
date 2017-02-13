@@ -103,14 +103,16 @@ class GitRepo(object):
     def checkout(self, branch):
         versions_prefix = '::'
         default_branch = self.branch
-        active_feature = self.active_feature
+
         if '*' in branch:
             branch_name = self._get_branch_name_from_regex(branch)
-            #print('return from func {0}={1}'.format(self.repo_location, branch_name))
             if branch_name:
-                branch = branch_name
+                branch = str(branch_name)
             else:
                 branch = default_branch
+
+        active_feature = self.active_feature
+
         if branch.startswith(versions_prefix):
             versions_branch = branch[len(versions_prefix):]
             components = self._read_versions_file(versions_branch)
@@ -150,11 +152,11 @@ class GitRepo(object):
         elif branch.startswith('.'):
             branch = self._fix_branch_name(branch)
         try:
-            #print('limor - current_branch={0}, branch={1}'.format(self.current_branch, branch))
             if self.current_branch != branch:
                 self.git.checkout(branch).wait()
-        except sh.ErrorReturnCode:
+        except sh.ErrorReturnCode, e:
             ctx.logger.error('Could not checkout branch {0}'.format(branch))
+            #ctx.logger.error('Could not checkout branch {0}. Error: {1}'.format(branch, e))
 
     def reset(self, hard, origin):
         if not self.validate_active_feature():
@@ -406,19 +408,24 @@ class GitRepo(object):
         return versions.get('components', {})
 
     def _get_branch_name_from_regex(self, branch):
-        branches = self.git_output('branch', '-r').stdout.strip().split('\n')
-        branch_name = [item for item in branches if re.search(branch, item)]
-        #print('repo={0}, branch_name={1}'.format(self.repo_location, branch_name))
+        branches = self.git_output('branch', '-a').stdout.strip().split('\n')
+        branches = [str(self._escape_ansi(item)).strip() for item in branches]
+        branch_names = [item.split("remotes/")[-1].split("origin/")[-1] for item in branches if re.search(branch, item)]
+        # remove duplicate branches remote and local
+        branch_name = list(set(branch_names))
         if len(branch_name) > 1:
             ctx.logger.error('More than one branch with regex {0} found: {1}'
                              .format(branch, branch_name))
             return None
         elif len(branch_name) == 1:
-            branch_name = ''.join(branch_name[0]).split("origin/")[-1]
-            #print('final_branch_name={0}'.format(branch_name))
+            branch_name = ''.join(branch_name[0])
             return branch_name
         else:
             return None
+
+    def _escape_ansi(self, line):
+        ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+        return ansi_escape.sub('', line)
 
 repo = GitRepo()
 
