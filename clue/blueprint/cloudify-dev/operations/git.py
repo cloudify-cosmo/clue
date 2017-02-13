@@ -103,15 +103,15 @@ class GitRepo(object):
     def checkout(self, branch):
         versions_prefix = '::'
         default_branch = self.branch
+        active_feature = self.active_feature
 
         if '*' in branch:
+            branch=branch.replace('.', '\.')
             branch_name = self._get_branch_name_from_regex(branch)
             if branch_name:
                 branch = str(branch_name)
             else:
                 branch = default_branch
-
-        active_feature = self.active_feature
 
         if branch.startswith(versions_prefix):
             versions_branch = branch[len(versions_prefix):]
