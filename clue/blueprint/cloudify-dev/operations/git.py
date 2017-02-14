@@ -108,10 +108,7 @@ class GitRepo(object):
         if '*' in branch:
             branch = branch.replace('.', '\.')
             branch_name = self._get_branch_name_from_regex(branch)
-            if branch_name:
-                branch = str(branch_name)
-            else:
-                branch = default_branch
+            branch = str(branch_name) if branch_name else default_branch
 
         if branch.startswith(versions_prefix):
             versions_branch = branch[len(versions_prefix):]
@@ -407,9 +404,9 @@ class GitRepo(object):
         return versions.get('components', {})
 
     def _get_branch_name_from_regex(self, branch):
-        branches = self.git_output('branch', '-a').stdout.strip().split('\n')
-        branches = [str(self._escape_ansi(item)).strip() for item in branches]
-        branch_names = [item.split("remotes/")[-1].split("origin/")[-1]
+        branches = self._escape_ansi(
+                self.git_output('branch', '-a').stdout).strip().split('\n')
+        branch_names = [item.strip().split("remotes/")[-1].split("origin/")[-1]
                         for item in branches if re.search(branch, item)]
         # remove duplicate branches remote and local
         branch_name = list(set(branch_names))
