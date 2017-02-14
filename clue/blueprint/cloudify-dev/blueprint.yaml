@@ -251,6 +251,14 @@ inputs:
     - elasticsearch==1.6.0
     - virtualenv>=13.1.2
     - psutil==3.3.0
+
+  # Aria specific fixes, until the versions in aria and cloudify will be
+  # reconciled properly
+    - Fabric==1.8.3
+    - bottle==0.12.7
+    - PyYAML==3.10
+    - wagon==0.3.2
+    - networkx==1.8.1
   git_config:
     description: |
       Git config to apply to all repos.
