@@ -154,6 +154,14 @@ class GitRepo(object):
         except sh.ErrorReturnCode:
             ctx.logger.error('Could not checkout branch {0}'.format(branch))
 
+    def fetch(self, all):
+        ctx.logger.info('fetching {0}'.format('all' if all else 'origin'))
+        self.git.fetch.bake(all=True)()
+
+    def clean(self, force):
+        ctx.logger.info('{0}cleaning'.format('force ' if force else ''))
+        self.git.clean.bake(force=force)()
+
     def reset(self, hard, origin):
         if not self.validate_active_feature():
             return
@@ -346,7 +354,10 @@ class GitRepo(object):
 
     def _git(self, log_out, repo_location=None):
         repo_location = repo_location or self.repo_location
-        git = sh.git
+        # set max time for each git operation..
+        # come to handle command workflow that get stuck
+        timeout = sh.timeout.bake(10)
+        git = timeout.git
         if log_out:
             git = bake(git)
         return git.bake(
@@ -560,6 +571,7 @@ def func(repo_method):
 
 
 for method in ['clone', 'configure', 'pull', 'status', 'checkout', 'reset',
-               'rebase', 'squash', 'diff', 'create_branch', 'branch_exists',
-               'delete_branch', 'ci_status', 'compare', 'pull_request']:
+               'fetch', 'clean', 'rebase', 'squash', 'diff', 'create_branch',
+               'branch_exists', 'delete_branch', 'ci_status', 'compare',
+               'pull_request']:
     globals()[method] = func(method)

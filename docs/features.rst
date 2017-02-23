@@ -145,6 +145,26 @@ to the status command
 
     $ clue git status -a
 
+``clue git clean``
+^^^^^^^^^^^^^^^^^^
+If you wish to delete all un-tracked local files in the active feature, run:
+
+.. code-block:: sh
+
+    $ clue git clean --force
+
+Pass ``--force/-h`` to verify action.
+
+``clue git fetch``
+^^^^^^^^^^^^^^^^^^
+If you wish to fetch remote branches in the active feature, run:
+
+.. code-block:: sh
+
+    $ clue git fetch
+
+Pass ``--all/-h`` to fetch all remotes.
+
 ``clue git reset``
 ^^^^^^^^^^^^^^^^^^
 If you wish to reset all changes made to repositories in the active feature

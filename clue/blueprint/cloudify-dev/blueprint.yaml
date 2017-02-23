@@ -348,6 +348,14 @@ node_types:
             active: {}
         rebase: self.operations.git.rebase
         squash: self.operations.git.squash
+        fetch:
+          implementation: self.operations.git.fetch
+          inputs:
+            all: {}
+        clean:
+          implementation: self.operations.git.clean
+          inputs:
+            force: {}
         reset:
           implementation: self.operations.git.reset
           inputs:

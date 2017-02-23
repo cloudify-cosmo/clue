@@ -189,6 +189,34 @@ commands:
         type_names: [git_repo]
       event_cls: clue.output:NamedNodeEvent
 
+    fetch:
+      args:
+        - name: --all
+          help: Fetch all remotes
+          default: false
+      task: *zero_retries_task
+      workflow: execute_operation
+      parameters:
+        operation: git.fetch
+        operation_kwargs:
+          all: { arg: all }
+        type_names: [git_repo]
+      event_cls: clue.output:NamedNodeEvent
+
+    clean:
+      args:
+        - name: --force
+          help: Force remove untracked files
+          default: false
+      task: *zero_retries_task
+      workflow: execute_operation
+      parameters:
+        operation: git.clean
+        operation_kwargs:
+          force: { arg: force }
+        type_names: [git_repo]
+      event_cls: clue.output:NamedNodeEvent
+
     reset:
       args:
         - name: --origin
